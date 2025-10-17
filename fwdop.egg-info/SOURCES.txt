@@ -1,0 +1,10 @@
+LICENSE
+README.md
+pyproject.toml
+setup.cfg
+fwdop.egg-info/PKG-INFO
+fwdop.egg-info/SOURCES.txt
+fwdop.egg-info/dependency_links.txt
+fwdop.egg-info/requires.txt
+fwdop.egg-info/top_level.txt
+tests/test_gfwdop.py
