@@ -18,7 +18,7 @@ class GFwdOp(LinearOperator):
     def __init__(self, model=None, rays=[], filepath=""):
         if filepath:
             # load sparse matrix from file
-            self._K = load_npz(f'{filepath}.npz')
+            self._K = load_npz(filepath)
         else:
             # store inputs
             self.__model = model
@@ -101,6 +101,6 @@ class GFwdOp(LinearOperator):
         else:
             return {ph: ncols for ph in phase if ph in self._phase_slices}
         
-    def save_matrix(self, filename="sparse_matrix"):
+    def save_matrix(self, filename="sparse_matrix.npz"):
         # save sparse matrix to a file
-        save_npz(f'{filename}.npz', self._K)
+        save_npz(filename, self._K)

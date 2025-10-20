@@ -56,7 +56,10 @@ srp = [((source_lat, source_lon, source_depth), (receiver_lat, receiver_lon), ["
 
 srr = get_rays(srp)
 
-G = GFwdOp(model, srr[:,2])
+# G = GFwdOp(model, srr[:,2])
+# G.save_matrix("M1_sp_G_mat.npz")
+
+G = GFwdOp(NPZ_filepath="M1_sp_G_mat.npz")
 
 # Generate different models and calculate dv
 functions = {
