@@ -20,8 +20,7 @@ class GFwdOp(LinearOperator):
         self.__model = model
         self.__rays = list(rays)  # preserve input order
 
-        # prepare dict to collect kernels per phase and a list preserving
-        # ray order
+        # prepare dict to collect kernels per phase and a list preserving ray order
         self.__kernel_matrices = {}
         self._rows_in_order = []
         self._phases_in_order = []
@@ -46,8 +45,7 @@ class GFwdOp(LinearOperator):
             cx = self._K.T.dot(cy)
             return domain.from_components(cx)
 
-        super().__init__(domain, codomain, mapping,
-                         adjoint_mapping=adjoint_mapping)
+        super().__init__(domain, codomain, mapping, adjoint_mapping=adjoint_mapping)
 
     def __calcMatrix__(self):
         # calculate kernels in the order of rays and track them per phase
@@ -66,8 +64,7 @@ class GFwdOp(LinearOperator):
 
         # stack rows into one big sparse matrix (observations x voxels)
         if len(self._rows_in_order) > 0:
-            rows = [csr_matrix(r) for r in self._rows_in_order]
-            self._K = vstack(rows).tocsr()
+            self._K = vstack([csr_matrix(r) for r in self._rows_in_order]).tocsr()
         else:
             # empty operator
             self._K = csr_matrix((0, 0))
@@ -88,16 +85,9 @@ class GFwdOp(LinearOperator):
     def getNnz(self, phase=["all"]):
         # return number of non-zero entries in kernel matrix
         if phase == ["all"]:
-            result = {}
-            for ph in self._phase_slices:
-                result[ph] = self._K[self._phase_slices[ph], :].nnz
-            return result
+            return {ph: self._K[self._phase_slices[ph], :].nnz for ph in self._phase_slices}
         else:
-            result = {}
-            for ph in phase:
-                if ph in self._phase_slices:
-                    result[ph] = self._K[self._phase_slices[ph], :].nnz
-            return result
+            return {ph: self._K[self._phase_slices[ph], :].nnz for ph in phase if ph in self._phase_slices}
 
     def get_voxelNum(self, phase=["all"]):
         # return number of voxels in kernel matrix (columns)
@@ -106,18 +96,3 @@ class GFwdOp(LinearOperator):
             return {ph: ncols for ph in self._phase_slices}
         else:
             return {ph: ncols for ph in phase if ph in self._phase_slices}
-
-    def __apply__(self, velocity_model):
-        # convenience: return per-phase travel times using the stacked matrix
-        print("Computing travel times from kernels...")
-        times = {}
-        for phase, sl in self._phase_slices.items():
-            mat = self._K[sl, :]
-            if mat.shape[0] > 0:
-                vec = mat.dot(velocity_model)
-                times[phase] = vec
-                print(
-                    f"{phase} travel times: min {vec.min():.2f} s, "
-                    f"max {vec.max():.2f} s"
-                )
-        return times

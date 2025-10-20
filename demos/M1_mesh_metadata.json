@@ -1,0 +1,17 @@
+{
+  "mesh_type": "tetrahedral",
+  "planet_model_name": "M1",
+  "planet_model_radius": 1737.1,
+  "generation_parameters": {},
+  "properties": [
+    "gmsh:physical",
+    "gmsh:geometrical",
+    "layer_0-layer_1-gmsh:bounding_entities",
+    "region",
+    "vp",
+    "vs",
+    "rho"
+  ],
+  "n_cells": 9975,
+  "n_points": 2258
+}
