@@ -1,4 +1,4 @@
-from scipy.sparse import csr_matrix, vstack
+from scipy.sparse import csr_matrix, vstack, save_npz, load_npz
 from pygeoinf.linear_operators import LinearOperator
 from pygeoinf.hilbert_space import EuclideanSpace
 
@@ -15,18 +15,22 @@ class GFwdOp(LinearOperator):
     `get_voxelNum`) and a convenience per-phase apply method.
     """
 
-    def __init__(self, model, rays):
-        # store inputs
-        self.__model = model
-        self.__rays = list(rays)  # preserve input order
+    def __init__(self, model=None, rays=[], filepath=""):
+        if filepath:
+            # load sparse matrix from file
+            self._K = load_npz(f'{filepath}.npz')
+        else:
+            # store inputs
+            self.__model = model
+            self.__rays = list(rays)  # preserve input order
 
-        # prepare dict to collect kernels per phase and a list preserving ray order
-        self.__kernel_matrices = {}
-        self._rows_in_order = []
-        self._phases_in_order = []
+            # prepare dict to collect kernels per phase and a list preserving ray order
+            self.__kernel_matrices = {}
+            self._rows_in_order = []
+            self._phases_in_order = []
 
-        # compute kernels and construct stacked sparse matrix
-        self.__calcMatrix__()
+            # compute kernels and construct stacked sparse matrix
+            self.__calcMatrix__()
 
         # domain: voxels, codomain: observations (stacked rows)
         n_voxels = self._K.shape[1]
@@ -96,3 +100,7 @@ class GFwdOp(LinearOperator):
             return {ph: ncols for ph in self._phase_slices}
         else:
             return {ph: ncols for ph in phase if ph in self._phase_slices}
+        
+    def save_matrix(self, filename="sparse_matrix"):
+        # save sparse matrix to a file
+        save_npz(f'{filename}.npz', self._K)
