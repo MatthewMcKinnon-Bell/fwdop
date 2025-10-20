@@ -1,9 +1,6 @@
-import logging
-from typing import Any, Iterable, List, Tuple
-
 import numpy as np
 from itertools import product
-from sensray import PlanetModel, CoordinateConverter
+from sensray import PlanetModel
 from fwdop import GFwdOp, make_scalar_field
 
 
@@ -47,25 +44,6 @@ def get_rays(srp):
             srr_list.append((source, receiver, ray))
 
     return np.array(srr_list, dtype=object)
-
-
-def display_dv(source_lat, source_lon, receiver_lat, receiver_lon):
-    '''
-    Display the dv property on a cross-section plane defined by source and receiver
-    '''
-    plane_normal = CoordinateConverter.compute_gc_plane_normal(
-        source_lat, source_lon, receiver_lat, receiver_lon
-    )
-
-    # Cross-section showing background Vp
-    print("Background P-wave velocity:")
-    plane_normal = plane_normal
-    plotter1 = model.mesh.plot_cross_section(
-        plane_normal=plane_normal,
-        property_name='dv',
-    )
-    plotter1.camera.position = (8000, 6000, 10000)
-    plotter1.show()
 
 
 def make_list(a, b, n, x):
@@ -126,7 +104,6 @@ source_lat, source_lon, source_depth = 0.0, 0.0, 150.0  # Equator, 150 km depth
 receiver_lat, receiver_lon = 30.0, 45.0  # Surface station
 srp = [((source_lat, source_lon, source_depth), (receiver_lat, receiver_lon), ["P"])]
 
-
 srr = get_rays(srp)
 
 # print("Calculate travel time kernels and residuals...")
@@ -134,10 +111,6 @@ G = GFwdOp(model, srr[:,2])
 # print(travel_times)
 
 # integrate a function over a cell from the mesh
-# points, indices = get_all_tetrahedra(model)
-# print(points)
-# pts, ctypes, cell_indices, cell_pts = get_cell_data(model, cell_id=0)
-
 print("Integrating over cell...")
 model.mesh.project_function_on_mesh(f, property_name="dv")
 
@@ -147,7 +120,7 @@ print("Cell data 'dv':", model.mesh.mesh.cell_data["dv"])
 travel_times = G(model.mesh.mesh.cell_data["dv"])
 
 # display dv using first source-receiver pair
-# display_dv(srr[0,0][0], srr[0,0][1], srr[0,1][0], srr[0,1][1])
+# model.mesh.display_dv(srr[0,0][0], srr[0,0][1], srr[0,1][0], srr[0,1][1], property_name="dv")
 
 
 m = G.adjoint(travel_times)
