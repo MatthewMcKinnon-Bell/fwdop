@@ -120,7 +120,8 @@ print("Cell data 'dv':", model.mesh.mesh.cell_data["dv"])
 travel_times = G(model.mesh.mesh.cell_data["dv"])
 
 # display dv using first source-receiver pair
-# model.mesh.display_dv(srr[0,0][0], srr[0,0][1], srr[0,1][0], srr[0,1][1], property_name="dv")
-
+# model = model.mesh.plot_cross_section(source_lat=srr[0,0][0], source_lon=srr[0,0][1], receiver_lat=srr[0,1][0], receiver_lon=srr[0,1][1], property_name="dv")
+# plotter1.camera.position = (8000, 6000, 10000)
+# plotter1.show()
 
 m = G.adjoint(travel_times)
