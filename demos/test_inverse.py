@@ -49,10 +49,42 @@ model.mesh.plot_cross_section(source_lat=source_lat, source_lon=source_lon, rece
 travel_times = G(model.mesh.mesh.cell_data["dv"])
 print(travel_times)
 
-# adjoint correct if G.adjoint(v) = first kernel (G._K)
+# Inversion
+
+# Test adjoint - Correct if G.adjoint(v) = first kernel (G._K)
 kernel_choice = 0  # desired kernel
-print(G._K.shape[0])
 v = np.zeros(G._K.shape[0])
 v[kernel_choice] = 1
-print(G.adjoint(v))
-print(list(G._K.values())[kernel_choice])
+print(f"Test Adjoint Success: {np.allclose(G.adjoint(v), G._K.getrow(kernel_choice).toarray().ravel())}")
+
+# Compute lambda from G and G.adjoint (GG^T)
+lambda_val = (G@G.adjoint)
+# Test lambda - Correct if dense matrix is symmetric
+print(f"Test lambda Success: {np.allclose(lambda_val.matrix(dense=True), lambda_val.matrix(dense=True).T)}")
+
+# Test solver - Shouldn't raise an error of any kind
+from pygeoinf.linear_solvers import LUSolver, CholeskySolver
+solver = LUSolver()
+lambda_inv = solver(lambda_val)
+
+# G_dagger - Should compute cell inverse
+G_dagger = G.adjoint@lambda_inv
+
+# M_tilde - G_dagger(d) where d is G applied onto the model. Dims N voxels
+M_tilde = G_dagger(travel_times)
+
+model.mesh.mesh.cell_data["solution"] = M_tilde
+# Test for one kernel - If M_tilde = kernel * G(m) / lambda
+print((G.matrix(dense=True) * travel_times / lambda_val.matrix(dense=True))[0])
+model.mesh.mesh.cell_data["kernel x d/lambda"] = (G.matrix(dense=True) * travel_times / lambda_val.matrix(dense=True))[0]
+
+# Inverse in a single operation
+M_tilde2 = (G.adjoint@solver(G@G.adjoint))(travel_times)
+print(np.allclose(M_tilde, (G.matrix(dense=True) * travel_times / lambda_val.matrix(dense=True))[0]))
+
+print("Solution visualization...")
+plotter1 = model.mesh.plot_cross_section(source_lat=source_lat, source_lon=source_lon, receiver_lat=receiver_lat, receiver_lon=receiver_lon, property_name="kernel x d/lambda")
+
+plotter1.camera.position = (8000, 6000, 10000)
+
+plotter1.show()
