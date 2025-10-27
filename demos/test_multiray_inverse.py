@@ -50,13 +50,12 @@ G = GFwdOp(model=model, rays=srr[:,2])
 
 # Generate different models and calculate dv
 functions = {
-    "radial": {"R": lambda r: r, "T": lambda theta, phi: np.ones_like(theta)},
     "simple": {"R": lambda r: np.ones_like(r), "T": lambda theta, phi: np.ones_like(theta)},
     "complex": {"R": lambda r: r**2 * np.exp(-r/100000), "T": lambda theta, phi: np.cos(theta)},
     "harmonic": {"R": lambda r: 0.1 * model.get_property_at_radius(radius=r, property_name="vp"), "T": lambda theta, phi: 0.5 * np.sqrt(5 / np.pi) * (3 * np.cos(theta) ** 2 - 1)},
 }
 
-func = "radial"
+func = "harmonic"
 f = make_scalar_field(functions[func]["R"], functions[func]["T"])
 
 model.mesh.project_function_on_mesh(f, property_name="dv")
@@ -66,7 +65,9 @@ travel_times = G(model.mesh.mesh.cell_data["dv"])
 print(travel_times)
 
 # Inverse in a single operation
-M_tilde = (G.adjoint@LUSolver()(G@G.adjoint))(G(model.mesh.mesh.cell_data["dv"]))
+lambda_val = (G@G.adjoint)
+solver = LUSolver()
+M_tilde = (G.adjoint@solver(G@G.adjoint))(travel_times)
 model.mesh.mesh.cell_data["solution"] = M_tilde
 print(M_tilde)
 
