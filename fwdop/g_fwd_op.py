@@ -57,9 +57,9 @@ class GFwdOp(LinearOperator):
             kernel = self.__model.mesh.compute_sensitivity_kernel(
                 ray,
                 property_name=f"v{ray.phase.name[0].lower()}",
-                attach_name=f"K_{ray.phase.name}_v{ray.phase.name[0].lower()}",
-                epsilon=1e-6,
-            )
+                attach_name=None,
+                epsilon=1e-6,           
+                )
 
             phase = ray.phase.name
             self.__kernel_matrices.setdefault(phase, []).append(kernel)
